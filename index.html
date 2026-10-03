@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FitnessTracker | AI-Powered Training & Analytics</title>
+  <meta name="description" content="Customizable fitness tracking application with Supabase backend and Gemini AI workout suggestions." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Desktop Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand-wrapper">
+        <div class="brand-logo-icon">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M18 20V10M12 20V4M6 20v-6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">FitnessTracker</div>
+          <span class="brand-badge">Supabase + Gemini</span>
+        </div>
+      </div>
+
+      <ul class="nav-menu">
+        <li>
+          <button class="nav-item-btn active" data-view="dashboard" id="nav-btn-dashboard">
+            <svg viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="3" width="7" height="9" rx="1" stroke-linecap="round"/>
+              <rect x="14" y="3" width="7" height="5" rx="1" stroke-linecap="round"/>
+              <rect x="14" y="12" width="7" height="9" rx="1" stroke-linecap="round"/>
+              <rect x="3" y="16" width="7" height="5" rx="1" stroke-linecap="round"/>
+            </svg>
+            Dashboard
+          </button>
+        </li>
+        <li>
+          <button class="nav-item-btn" data-view="ai-coach" id="nav-btn-ai-coach">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round"/>
+            </svg>
+            AI Coach (Gemini)
+          </button>
+        </li>
+        <li>
+          <button class="nav-item-btn" data-view="routines" id="nav-btn-routines">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M9 11l3 3L22 4" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Routine Builder
+          </button>
+        </li>
+        <li>
+          <button class="nav-item-btn" data-view="log-workout" id="nav-btn-log-workout">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 5v14M5 12h14" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Log Workout
+          </button>
+        </li>
+        <li>
+          <button class="nav-item-btn" data-view="analytics" id="nav-btn-analytics">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M3 3v18h18" stroke-linecap="round"/>
+              <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Analytics & Progress
+          </button>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <div class="user-card" id="user-profile-trigger" title="Account & Profile Settings">
+          <div class="user-avatar" id="sidebar-user-avatar">GA</div>
+          <div class="user-info">
+            <span class="user-name" id="sidebar-user-name">Guest Athlete</span>
+            <span class="user-role" id="sidebar-user-email">Tap to authenticate</span>
+          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Panel -->
+    <main class="main-content">
+      <!-- Top Header Bar -->
+      <header class="top-header">
+        <div class="header-title-box">
+          <h1 id="page-title">Training Dashboard</h1>
+          <p id="page-subtitle">Track workouts, routines, and AI suggestions with Supabase sync</p>
+        </div>
+        <div class="header-actions">
+          <div class="status-pill" id="supabase-pill" title="Click to test Supabase connection" style="cursor: pointer;">
+            <span class="status-dot pulse" id="supabase-dot"></span>
+            <span id="supabase-status-text">Connecting Supabase...</span>
+          </div>
+          <button class="btn btn-secondary" id="header-refresh-btn" title="Refresh data from Supabase">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+            Sync
+          </button>
+          <button class="btn btn-primary" id="header-quick-start-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            Quick Start
+          </button>
+        </div>
+      </header>
+
+      <!-- Active Workout HUD Bar -->
+      <div class="active-workout-hud" id="active-workout-hud">
+        <div>
+          <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-lime); font-weight: 700;">Workout In Progress</span>
+          <h4 id="hud-workout-name" style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #FFFFFF;">Full Body Functional Blitz</h4>
+          <span id="hud-workout-meta" style="font-size: 0.85rem; color: var(--text-muted);">Rest intervals & active session timer running</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <div class="hud-timer" id="hud-timer-display">00:00</div>
+          <button class="btn btn-lime" id="hud-finish-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Finish & Log
+          </button>
+          <button class="btn btn-ghost" id="hud-cancel-btn" title="Cancel workout">✕</button>
+        </div>
+      </div>
+
+      <!-- ================= VIEW 1: DASHBOARD ================= -->
+      <section class="view-panel active" id="view-dashboard">
+        <!-- KPI Metrics Grid -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Total Workouts</span>
+              <div class="stat-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 20V10M12 20V4M6 20v-6"/>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-value" id="stat-total-workouts">0</div>
+            <div class="stat-subtext">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+              Supabase workouts table
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Total Minutes</span>
+              <div class="stat-icon" style="color: var(--accent-lime); background: rgba(16, 185, 129, 0.1);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-value" id="stat-total-minutes">0m</div>
+            <div class="stat-subtext">Total volume logged</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Active Streak</span>
+              <div class="stat-icon" style="color: var(--accent-amber); background: rgba(245, 158, 11, 0.1);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-value" id="stat-streak">0 Days</div>
+            <div class="stat-subtext" style="color: var(--accent-amber);">Keep the momentum high!</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-label">Saved Routines</span>
+              <div class="stat-icon" style="color: var(--accent-purple); background: rgba(139, 92, 246, 0.1);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-value" id="stat-routine-count">0</div>
+            <div class="stat-subtext" style="color: var(--accent-purple);">Custom & AI programs</div>
+          </div>
+        </div>
+
+        <!-- Quick AI Banner -->
+        <div class="action-banner">
+          <div class="action-banner-content">
+            <h3>🤖 Need workout inspiration? Ask Gemini AI</h3>
+            <p>Generate periodized training routines tailored to your equipment, available time, target muscle focus, and fatigue level in seconds.</p>
+          </div>
+          <button class="btn btn-primary" id="banner-ai-btn">
+            Generate AI Routine
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+
+        <!-- Recent Activity Card -->
+        <div class="glass-card" style="margin-bottom: 28px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: #FFFFFF;">Recent Workout Logs</h3>
+              <p style="color: var(--text-muted); font-size: 0.85rem;">Synced with Supabase <code style="color: var(--accent-cyan); font-family: var(--font-mono);">workouts</code> & <code style="color: var(--accent-cyan); font-family: var(--font-mono);">logs</code> tables</p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <button class="btn btn-secondary" id="btn-go-to-log" style="font-size: 0.82rem; padding: 6px 14px;">
+                + Log New Workout
+              </button>
+            </div>
+          </div>
+
+          <!-- Search and Filter Bar -->
+          <div class="table-filter-bar" style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 220px; position: relative;">
+              <input type="text" id="search-workout-logs" class="form-control" placeholder="Search exercises, notes..." style="padding-left: 36px;" />
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </div>
+            <div style="min-width: 170px;">
+              <select id="filter-workout-mood" class="form-select">
+                <option value="ALL">All Moods</option>
+                <option value="🔥 Crushed It">🔥 Crushed It</option>
+                <option value="💪 Feeling Strong">💪 Feeling Strong</option>
+                <option value="⚡ Energized">⚡ Energized</option>
+                <option value="😴 Exhausted">😴 Exhausted</option>
+                <option value="🧘 Relaxed">🧘 Relaxed</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="recent-table-wrap">
+            <table class="workout-table">
+              <thead>
+                <tr>
+                  <th>Exercise / Routine</th>
+                  <th>Duration</th>
+                  <th>Mood & Energy</th>
+                  <th>Notes</th>
+                  <th>Date</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="workout-history-tbody">
+                <tr>
+                  <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                    Loading workouts from Supabase...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 2: AI COACH (GEMINI) ================= -->
+      <section class="view-panel" id="view-ai-coach">
+        <div class="glass-card ai-card" style="margin-bottom: 28px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+            <div>
+              <span class="brand-badge" style="margin-bottom: 8px; display: inline-block;">Google Gemini 3.8 Flash</span>
+              <h2 style="font-family: var(--font-heading); font-size: 1.6rem; font-weight: 700; color: #FFFFFF;">Personalized AI Workout Architect</h2>
+              <p style="color: var(--text-muted); font-size: 0.92rem; margin-top: 4px;">
+                Engineered with Gemini to craft progressive, balanced fitness sessions calibrated to your goals, equipment, and fatigue level.
+              </p>
+            </div>
+            <button class="btn btn-secondary" id="btn-api-key-config" style="font-size: 0.8rem; padding: 6px 12px;">
+              🔑 API Settings
+            </button>
+          </div>
+
+          <form id="ai-generator-form">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="ai-goal">Training Goal</label>
+                <select class="form-select" id="ai-goal">
+                  <option value="Hypertrophy & Muscle Building">Hypertrophy & Muscle Building</option>
+                  <option value="Maximal Strength & Power">Maximal Strength & Power</option>
+                  <option value="Fat Loss & HIIT Conditioning">Fat Loss & HIIT Conditioning</option>
+                  <option value="Endurance & Cardiovascular Health">Endurance & Cardio Health</option>
+                  <option value="Functional Mobility & Core">Functional Mobility & Core</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="ai-focus">Target Focus Area</label>
+                <select class="form-select" id="ai-focus">
+                  <option value="Full Body">Full Body</option>
+                  <option value="Upper Body">Upper Body (Chest, Back, Arms)</option>
+                  <option value="Lower Body">Lower Body (Quads, Glutes, Hamstrings)</option>
+                  <option value="Core & HIIT">Core & HIIT</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="ai-level">Experience Level</label>
+                <select class="form-select" id="ai-level">
+                  <option value="Beginner">Beginner (Foundational Movements)</option>
+                  <option value="Intermediate" selected>Intermediate (Standard Intensity)</option>
+                  <option value="Advanced">Advanced (High Volume & Density)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="ai-duration">Target Duration</label>
+                <select class="form-select" id="ai-duration">
+                  <option value="15">15 Minutes (Micro Blitz)</option>
+                  <option value="30">30 Minutes (Efficient Session)</option>
+                  <option value="45" selected>45 Minutes (Optimal Hypertrophy)</option>
+                  <option value="60">60 Minutes (High Volume Power)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="ai-equipment">Available Equipment</label>
+                <select class="form-select" id="ai-equipment">
+                  <option value="Dumbbells & Bodyweight">Dumbbells & Bodyweight</option>
+                  <option value="Full Commercial Gym (Barbells, Cables, Machines)">Full Commercial Gym</option>
+                  <option value="Bodyweight Only (Zero Equipment)">Bodyweight Only (No Equipment)</option>
+                  <option value="Resistance Bands & Kettlebells">Bands & Kettlebells</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="ai-energy">Today's Energy Level</label>
+                <select class="form-select" id="ai-energy">
+                  <option value="⚡ High Energy & Ready to Push">⚡ High Energy & Ready to Push</option>
+                  <option value="💪 Moderate Energy">💪 Moderate Energy</option>
+                  <option value="🧘 Low Energy / Active Recovery">🧘 Low Energy / Active Recovery</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 14px; align-items: center; margin-top: 6px;">
+              <button type="submit" class="btn btn-primary" id="btn-generate-ai">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                </svg>
+                Generate Custom Workout
+              </button>
+              <span id="ai-generating-indicator" style="display: none; color: var(--accent-cyan); font-size: 0.88rem; font-weight: 500;">
+                🧠 Gemini 3.8 Flash is computing biomechanics & volume...
+              </span>
+            </div>
+          </form>
+        </div>
+
+        <!-- AI Result Presentation -->
+        <div id="ai-result-container" style="display: none;">
+          <div class="glass-card" style="border-color: rgba(0, 240, 255, 0.4); box-shadow: 0 0 35px rgba(0, 240, 255, 0.12);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+              <div>
+                <span class="brand-badge" id="ai-result-badge">Gemini Generated</span>
+                <h3 id="ai-result-title" style="font-family: var(--font-heading); font-size: 1.55rem; font-weight: 700; color: #FFFFFF; margin-top: 6px;">
+                  Full Body Power Routine
+                </h3>
+                <p id="ai-result-desc" style="color: var(--text-muted); font-size: 0.95rem; margin-top: 4px; max-width: 800px; line-height: 1.5;">
+                  Description of generated routine.
+                </p>
+              </div>
+              <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn btn-lime" id="ai-save-routine-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+                  Save to My Routines
+                </button>
+                <button class="btn btn-primary" id="ai-start-workout-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  Start Workout Now
+                </button>
+              </div>
+            </div>
+
+            <!-- Warm-up Steps -->
+            <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px;">
+              <h4 style="font-size: 0.88rem; font-weight: 700; color: var(--accent-amber); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
+                🔥 Dynamic Warm-Up Protocol
+              </h4>
+              <ul id="ai-warmup-list" style="padding-left: 20px; color: var(--text-muted); font-size: 0.88rem; line-height: 1.6;">
+              </ul>
+            </div>
+
+            <!-- Exercise Breakdown -->
+            <h4 style="font-size: 0.88rem; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;">
+              🏋️ Target Exercise Circuit
+            </h4>
+            <div id="ai-exercise-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 20px;">
+            </div>
+
+            <!-- Cooldown Steps -->
+            <div id="ai-cooldown-box" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px; margin-bottom: 20px;">
+              <h4 style="font-size: 0.88rem; font-weight: 700; color: var(--accent-lime); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">
+                🧘 Cooldown & Mobility Recovery
+              </h4>
+              <ul id="ai-cooldown-list" style="padding-left: 20px; color: var(--text-muted); font-size: 0.85rem; line-height: 1.5;">
+              </ul>
+            </div>
+
+            <!-- Coaching Quote -->
+            <blockquote id="ai-quote-box" style="border-left: 3px solid var(--accent-lime); padding-left: 14px; font-style: italic; color: var(--text-muted); font-size: 0.9rem;">
+            </blockquote>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 3: ROUTINE BUILDER ================= -->
+      <section class="view-panel" id="view-routines">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h2 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700; color: #FFFFFF;">Routine Library</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Custom and AI-crafted workout routines saved in Supabase <code style="color: var(--accent-cyan); font-family: var(--font-mono);">routines</code> table</p>
+          </div>
+          <button class="btn btn-primary" id="btn-open-create-routine-modal">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Create Routine
+          </button>
+        </div>
+
+        <div class="routines-grid" id="routines-grid-container">
+          <!-- Dynamic routine cards inserted here -->
+        </div>
+      </section>
+
+      <!-- ================= VIEW 4: LOG WORKOUT ================= -->
+      <section class="view-panel" id="view-log-workout">
+        <div class="glass-card" style="max-width: 720px; margin: 0 auto;">
+          <h2 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700; color: #FFFFFF; margin-bottom: 6px;">Log Workout Session</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 24px;">
+            Record your exercises, duration, training notes, and mood directly to Supabase <code style="color: var(--accent-cyan); font-family: var(--font-mono);">workouts</code> and <code style="color: var(--accent-cyan); font-family: var(--font-mono);">logs</code> tables.
+          </p>
+
+          <form id="manual-log-form">
+            <div class="form-group" style="margin-bottom: 18px;">
+              <label for="log-exercise-name">Exercise or Routine Name *</label>
+              <input type="text" class="form-control" id="log-exercise-name" placeholder="e.g. Incline Bench & Bicep Blast, or 5K Morning Run" required />
+            </div>
+
+            <div class="form-group" style="margin-bottom: 18px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label>Duration: <span id="duration-display-val" style="color: var(--accent-cyan); font-weight: 700;">45</span> Minutes</label>
+                <div style="display: flex; gap: 6px;">
+                  <button type="button" class="btn btn-ghost quick-dur-btn" data-dur="20" style="padding: 2px 8px; font-size: 0.75rem;">20m</button>
+                  <button type="button" class="btn btn-ghost quick-dur-btn" data-dur="30" style="padding: 2px 8px; font-size: 0.75rem;">30m</button>
+                  <button type="button" class="btn btn-ghost quick-dur-btn" data-dur="45" style="padding: 2px 8px; font-size: 0.75rem;">45m</button>
+                  <button type="button" class="btn btn-ghost quick-dur-btn" data-dur="60" style="padding: 2px 8px; font-size: 0.75rem;">60m</button>
+                </div>
+              </div>
+              <input type="range" id="log-duration-slider" min="5" max="180" step="5" value="45" style="width: 100%; accent-color: var(--accent-cyan); cursor: pointer;" />
+            </div>
+
+            <div class="form-group" style="margin-bottom: 18px;">
+              <label>Workout Mood & Energy *</label>
+              <div class="mood-selector" id="log-mood-selector">
+                <button type="button" class="mood-btn selected" data-mood="🔥 Crushed It">🔥 Crushed It</button>
+                <button type="button" class="mood-btn" data-mood="💪 Feeling Strong">💪 Feeling Strong</button>
+                <button type="button" class="mood-btn" data-mood="⚡ Energized">⚡ Energized</button>
+                <button type="button" class="mood-btn" data-mood="😴 Exhausted">😴 Exhausted</button>
+                <button type="button" class="mood-btn" data-mood="🧘 Relaxed">🧘 Relaxed</button>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 24px;">
+              <label for="log-notes">Training Notes (Loads, RPE, Progression, Technique)</label>
+              <textarea class="form-textarea" id="log-notes" rows="3" placeholder="e.g., Hit 85kg for 4 sets of 8 reps on bench. Rested 90 seconds between compound lifts. Felt great."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Save Workout to Supabase
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- ================= VIEW 5: ANALYTICS ================= -->
+      <section class="view-panel" id="view-analytics">
+        <div style="margin-bottom: 24px;">
+          <h2 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700; color: #FFFFFF;">Performance & Consistency Analytics</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Analyze workout frequency, duration volume, and mood sentiment trends over time</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+          <!-- 7-Day Training Volume -->
+          <div class="glass-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <h3 style="font-size: 1.1rem; font-weight: 700;">Weekly Training Volume</h3>
+              <span style="font-size: 0.8rem; color: var(--accent-cyan); font-weight: 600;" id="analytics-total-weekly-min">0 mins total</span>
+            </div>
+            <div id="analytics-bars-container" style="display: flex; align-items: flex-end; justify-content: space-between; height: 180px; padding-top: 20px; border-bottom: 1px solid var(--border-subtle); gap: 8px;">
+              <!-- Dynamic volume bars -->
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.75rem; color: var(--text-muted);">
+              <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+            </div>
+          </div>
+
+          <!-- Mood Breakdown -->
+          <div class="glass-card">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 14px;">Training Mood & Sentiment</h3>
+            <div id="analytics-mood-breakdown" style="display: flex; flex-direction: column; gap: 14px;">
+              <!-- Mood breakdown items -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary KPI Row -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 20px;">
+          <div class="glass-card" style="padding: 16px;">
+            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Average Session Length</div>
+            <div id="analytics-avg-duration" style="font-size: 1.5rem; font-weight: 700; color: var(--accent-cyan); margin-top: 4px;">0 min</div>
+          </div>
+          <div class="glass-card" style="padding: 16px;">
+            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Most Frequent Mood</div>
+            <div id="analytics-top-mood" style="font-size: 1.25rem; font-weight: 700; color: var(--accent-lime); margin-top: 4px;">—</div>
+          </div>
+          <div class="glass-card" style="padding: 16px;">
+            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Total Active Records</div>
+            <div id="analytics-records-count" style="font-size: 1.5rem; font-weight: 700; color: #FFFFFF; margin-top: 4px;">0</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="mobile-nav">
+      <button class="mobile-nav-btn active" data-view="dashboard" id="mob-nav-dashboard">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/></svg>
+        Home
+      </button>
+      <button class="mobile-nav-btn" data-view="ai-coach" id="mob-nav-ai">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
+        AI Coach
+      </button>
+      <button class="mobile-nav-btn" data-view="routines" id="mob-nav-routines">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Routines
+      </button>
+      <button class="mobile-nav-btn" data-view="log-workout" id="mob-nav-log">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Log
+      </button>
+      <button class="mobile-nav-btn" data-view="analytics" id="mob-nav-analytics">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+        Stats
+      </button>
+    </nav>
+  </div>
+
+  <!-- ================= MODAL: CREATE ROUTINE ================= -->
+  <div class="modal-overlay" id="create-routine-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">Create Custom Routine</h3>
+        <button class="close-modal-btn" id="close-routine-modal-btn">✕</button>
+      </div>
+
+      <form id="create-routine-form">
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label for="custom-routine-title">Routine Title *</label>
+          <input type="text" class="form-control" id="custom-routine-title" placeholder="e.g. Chest & Shoulder Hypertrophy" required />
+        </div>
+
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label for="custom-routine-desc">Description / Focus</label>
+          <textarea class="form-textarea" id="custom-routine-desc" rows="2" placeholder="Focuses on progressive overload on bench press and overhead dumbbell extensions."></textarea>
+        </div>
+
+        <div style="margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label style="font-size: 0.84rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Exercises</label>
+            <button type="button" class="btn btn-secondary" id="btn-add-exercise-row" style="font-size: 0.78rem; padding: 4px 10px;">
+              + Add Exercise
+            </button>
+          </div>
+          <div id="routine-exercises-list" style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- Exercise Row Item -->
+            <div class="exercise-builder-row" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 8px; align-items: center;">
+              <input type="text" class="form-control ex-name" placeholder="Exercise Name" value="Barbell Bench Press" required />
+              <input type="number" class="form-control ex-sets" placeholder="Sets" value="4" min="1" required />
+              <input type="text" class="form-control ex-reps" placeholder="Reps" value="10 reps" required />
+              <button type="button" class="btn btn-ghost remove-row-btn" style="padding: 6px;">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+          Save Routine to Supabase
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: WORKOUT LOG DETAILS ================= -->
+  <div class="modal-overlay" id="workout-details-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title" id="detail-modal-exercise">Workout Details</h3>
+        <button class="close-modal-btn" id="close-details-modal-btn">✕</button>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px;">
+          <span style="color: var(--text-muted); font-size: 0.85rem;">Duration</span>
+          <span id="detail-modal-duration" style="font-weight: 700; color: var(--accent-cyan);">45 mins</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px;">
+          <span style="color: var(--text-muted); font-size: 0.85rem;">Mood & Energy</span>
+          <span id="detail-modal-mood" class="brand-badge" style="font-size: 0.85rem;">🔥 Crushed It</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px;">
+          <span style="color: var(--text-muted); font-size: 0.85rem;">Logged At</span>
+          <span id="detail-modal-date" style="color: var(--text-main); font-size: 0.85rem;">—</span>
+        </div>
+        <div>
+          <span style="color: var(--text-muted); font-size: 0.85rem; display: block; margin-bottom: 6px;">Notes / Progression</span>
+          <div id="detail-modal-notes" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 12px; font-size: 0.9rem; line-height: 1.5; color: #FFFFFF;">
+            —
+          </div>
+        </div>
+        <div style="border-top: 1px solid var(--border-subtle); padding-top: 12px; font-size: 0.72rem; color: var(--text-faint); font-family: var(--font-mono);">
+          Workout UUID: <span id="detail-modal-id">—</span>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <button class="btn btn-secondary" id="detail-modal-close-btn" style="flex: 1;">Close</button>
+          <button class="btn btn-ghost" id="detail-modal-delete-btn" style="color: var(--accent-rose);">Delete Record</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: AUTH & SETTINGS ================= -->
+  <div class="modal-overlay" id="auth-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">Supabase & AI Profile</h3>
+        <button class="close-modal-btn" id="close-auth-modal-btn">✕</button>
+      </div>
+
+      <div style="display: flex; border-bottom: 1px solid var(--border-subtle); margin-bottom: 20px;">
+        <button type="button" class="btn btn-ghost active" id="tab-auth-login" style="flex: 1; border-radius: 0; border-bottom: 2px solid var(--accent-cyan);">Sign In / Up</button>
+        <button type="button" class="btn btn-ghost" id="tab-auth-profile" style="flex: 1; border-radius: 0;">Profile Info</button>
+        <button type="button" class="btn btn-ghost" id="tab-auth-api" style="flex: 1; border-radius: 0;">AI Settings</button>
+      </div>
+
+      <!-- Tab 1: Supabase Auth Form -->
+      <div id="auth-tab-content">
+        <form id="supabase-auth-form">
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label for="auth-name">Full Name (Syncs with <code style="font-family: var(--font-mono); color: var(--accent-cyan);">profiles</code>)</label>
+            <input type="text" class="form-control" id="auth-name" placeholder="Alex Morgan" />
+          </div>
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label for="auth-email">Email Address</label>
+            <input type="email" class="form-control" id="auth-email" placeholder="athlete@fitnesstracker.app" required />
+          </div>
+
+          <div class="form-group" style="margin-bottom: 18px;">
+            <label for="auth-password">Password</label>
+            <input type="password" class="form-control" id="auth-password" placeholder="••••••••" required />
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+            <button type="button" class="btn btn-primary" id="btn-auth-signin" style="flex: 1;">
+              Sign In
+            </button>
+            <button type="button" class="btn btn-secondary" id="btn-auth-signup" style="flex: 1;">
+              Create Account
+            </button>
+          </div>
+
+          <button type="button" class="btn btn-ghost" id="btn-auth-signout" style="width: 100%; display: none; color: var(--accent-rose); border: 1px solid rgba(244, 63, 94, 0.3);">
+            Sign Out of Supabase
+          </button>
+        </form>
+      </div>
+
+      <!-- Tab 2: Profile Info -->
+      <div id="profile-tab-content" style="display: none;">
+        <div style="display: flex; flex-direction: column; gap: 12px; font-size: 0.88rem;">
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">
+            <span style="color: var(--text-muted);">Status</span>
+            <span id="profile-view-status" style="color: var(--accent-lime); font-weight: 600;">Guest Mode</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">
+            <span style="color: var(--text-muted);">User ID</span>
+            <span id="profile-view-id" style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-main);">None</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">
+            <span style="color: var(--text-muted);">Email</span>
+            <span id="profile-view-email" style="color: var(--text-main);">—</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">
+            <span style="color: var(--text-muted);">Backend</span>
+            <span style="color: var(--accent-cyan);">Supabase (hcscumsjcglzonzjvzvx)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Gemini API Config -->
+      <div id="api-tab-content" style="display: none;">
+        <div style="margin-bottom: 14px;">
+          <label style="font-size: 0.84rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Google Gemini API Key</label>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin: 4px 0 10px 0;">
+            Enter your Gemini API key (or configure <code style="color: var(--accent-cyan); font-family: var(--font-mono);">VITE_GEMINI_API_KEY</code> in <code style="font-family: var(--font-mono);">.env</code>). When empty, the app runs the built-in smart algorithmic generator.
+          </p>
+          <input type="password" class="form-control" id="gemini-key-input" placeholder="AIzaSy..." />
+        </div>
+        <button type="button" class="btn btn-lime" id="btn-save-gemini-key" style="width: 100%;">
+          Save API Key
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Main Application Logic -->
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
